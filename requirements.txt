@@ -1,0 +1,26 @@
+# Core data science
+pandas>=2.0
+numpy>=1.24
+scipy>=1.11
+
+# Visualization
+matplotlib>=3.7
+seaborn>=0.12
+
+# Machine learning
+scikit-learn>=1.3
+
+# HTTP / API
+requests>=2.31
+
+# Database
+sqlalchemy>=2.0
+pymysql>=1.1
+
+# Jupyter
+jupyter>=1.0
+notebook>=7.0
+ipykernel>=6.25
+
+# Optional: interactive widgets in notebooks
+ipywidgets>=8.0
