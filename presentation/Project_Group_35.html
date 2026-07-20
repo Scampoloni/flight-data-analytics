@@ -7516,7 +7516,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Flight-Data-Analytics-Project">Flight Data Analytics Project<a class="anchor-link" href="#Flight-Data-Analytics-Project">¶</a></h1><h2 id="Data-Collection,-Analysis-and-Modeling-of-Flight-Prices">Data Collection, Analysis and Modeling of Flight Prices<a class="anchor-link" href="#Data-Collection,-Analysis-and-Modeling-of-Flight-Prices">¶</a></h2><p>The objective of this project is to analyze flight characteristics and model flight prices using data analytics and machine learning methods.</p>
+<h1 id="OpenSky-Flight-Data-Pipeline-&amp;-Traffic-Analytics">OpenSky Flight Data Pipeline &amp; Traffic Analytics<a class="anchor-link" href="#OpenSky-Flight-Data-Pipeline-&amp;-Traffic-Analytics">¶</a></h1><h2 id="Educational-end-to-end-analytics-workflow">Educational end-to-end analytics workflow<a class="anchor-link" href="#Educational-end-to-end-analytics-workflow">¶</a></h2><p>This ZHAW university group project uses OpenSky state-vector data to demonstrate API ingestion, cleaning, SQL, EDA, statistics, regression mechanics, and clustering. The <code>price</code> variable is synthetic and does not represent real ticket prices.</p>
 </div>
 </div>
 </div>
@@ -7545,7 +7545,7 @@ a.anchor-link {
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">create_engine</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">URL</span><span class="p">,</span> <span class="n">create_engine</span>
 
 <span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">pearsonr</span><span class="p">,</span> <span class="n">f_oneway</span>
 
@@ -7571,7 +7571,8 @@ a.anchor-link {
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">url</span> <span class="o">=</span> <span class="s2">"https://opensky-network.org/api/states/all"</span>
 
-<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 
 <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
@@ -7626,12 +7627,12 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s2">"data_raw"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s2">"data/raw"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"data_raw/opensky_states_raw.json"</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"data/raw/opensky_states_raw.json"</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Gespeichert:"</span><span class="p">,</span> <span class="s2">"data_raw/opensky_states_raw.json"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Gespeichert:"</span><span class="p">,</span> <span class="s2">"data/raw/opensky_states_raw.json"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7644,7 +7645,7 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Gespeichert: data_raw/opensky_states_raw.json
+<pre>Gespeichert: data/raw/opensky_states_raw.json
 </pre>
 </div>
 </div>
@@ -7717,7 +7718,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-Data-Preparation">2. Data Preparation<a class="anchor-link" href="#2.-Data-Preparation">¶</a></h2><p>This section cleans the raw data and performs feature engineering, including the generation of a price variable.</p>
+<h2 id="2.-Data-Preparation">2. Data Preparation<a class="anchor-link" href="#2.-Data-Preparation">¶</a></h2><p>This section filters and cleans the state vectors. It also generates a synthetic <code>price</code> variable for the original academic exercises; that variable is not an OpenSky field or a real airfare.</p>
 </div>
 </div>
 </div>
@@ -7864,7 +7865,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.-Data-Storage">3. Data Storage<a class="anchor-link" href="#3.-Data-Storage">¶</a></h2><p>The cleaned data is stored in a MySQL database and accessed via SQL queries from Python.</p>
+<h2 id="3.-Optional-MySQL-Storage-and-SQL-Analysis">3. Optional MySQL Storage and SQL Analysis<a class="anchor-link" href="#3.-Optional-MySQL-Storage-and-SQL-Analysis">¶</a></h2><p>When MySQL is available, the cleaned data is stored through SQLAlchemy and queried from Python. Connection values are supplied through <code>MYSQL_*</code> environment variables.</p>
 </div>
 </div>
 </div>
@@ -7876,9 +7877,15 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span>
-    <span class="s2">"mysql+pymysql://root:password@localhost:3306/flights_db?charset=utf8mb4"</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">database_url</span> <span class="o">=</span> <span class="n">URL</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="s2">"mysql+pymysql"</span><span class="p">,</span>
+    <span class="n">username</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"MYSQL_USER"</span><span class="p">),</span>
+    <span class="n">password</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"MYSQL_PASSWORD"</span><span class="p">),</span>
+    <span class="n">host</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"MYSQL_HOST"</span><span class="p">,</span> <span class="s2">"localhost"</span><span class="p">),</span>
+    <span class="n">port</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"MYSQL_PORT"</span><span class="p">,</span> <span class="s2">"3306"</span><span class="p">)),</span>
+    <span class="n">database</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"MYSQL_DATABASE"</span><span class="p">,</span> <span class="s2">"flights_db"</span><span class="p">),</span>
 <span class="p">)</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">database_url</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8084,11 +8091,11 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s2">"data_processed"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s2">"data/processed"</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="n">df_clean</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">"data_processed/flights_clean.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">df_clean</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">"data/processed/flights_clean.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Gespeichert: data_processed/flights_clean.csv"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Gespeichert: data/processed/flights_clean.csv"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8101,7 +8108,7 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Gespeichert: data_processed/flights_clean.csv
+<pre>Gespeichert: data/processed/flights_clean.csv
 </pre>
 </div>
 </div>
@@ -8685,7 +8692,7 @@ Name: price, dtype: float64</pre>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="6.-Regression-Modeling">6. Regression Modeling<a class="anchor-link" href="#6.-Regression-Modeling">¶</a></h2><p>A linear regression model is trained to predict flight prices.</p>
+<h2 id="6.-Educational-Regression-Demonstration">6. Educational Regression Demonstration<a class="anchor-link" href="#6.-Educational-Regression-Demonstration">¶</a></h2><p>The target is synthetic and was constructed partly from velocity and geometric altitude, which are also predictors. This exercise demonstrates train/test splitting, fitting, RMSE, and R²; its performance is not evidence of real-world ticket-price predictability.</p>
 </div>
 </div>
 </div>
@@ -9208,7 +9215,7 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Interpretation:</strong> The regression model explains a large proportion of the variance in prices (R²), while the RMSE indicates a relatively low average prediction error.</p>
+<p><strong>Interpretation:</strong> R² and RMSE show how the model fits this constructed target. Because target inputs overlap with predictors, these values are expected to be favourable and must not be interpreted as real airfare-prediction performance.</p>
 </div>
 </div>
 </div>
@@ -9295,7 +9302,7 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="7.-Clustering">7. Clustering<a class="anchor-link" href="#7.-Clustering">¶</a></h2><p>k-Means clustering is used to identify different flight segments.</p>
+<h2 id="7.-Descriptive-Flight-Profile-Clustering">7. Descriptive Flight-Profile Clustering<a class="anchor-link" href="#7.-Descriptive-Flight-Profile-Clustering">¶</a></h2><p>KMeans explores three groups in the selected feature space. The groups are descriptive, include the synthetic <code>price</code> feature, and are not official aircraft, fare, or operational categories.</p>
 </div>
 </div>
 </div>
@@ -9493,7 +9500,7 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Interpretation:</strong> The clustering results indicate three distinct flight segments corresponding to low-cost, mid-range, and premium flights.</p>
+<p><strong>Interpretation:</strong> The three clusters summarise similarity in the selected standardised features. They are exploratory labels only and do not correspond to low-cost, mid-range, or premium fares.</p>
 </div>
 </div>
 </div>

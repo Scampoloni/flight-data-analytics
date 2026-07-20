@@ -1,165 +1,183 @@
-# Flight Data Analytics
+# OpenSky Flight Data Pipeline & Traffic Analytics
 
-A university data analytics project that collects real-time flight data via the OpenSky Network API, stores it in a MySQL database, and performs comprehensive data analysis including exploratory analysis, statistical testing, regression modeling, and unsupervised clustering.
+## Project Summary
 
----
+University group project demonstrating an end-to-end analytics workflow using live OpenSky flight data, including API ingestion, JSON processing, data cleaning, MySQL storage, SQL analysis, exploratory data analysis, statistical testing, regression mechanics, and flight-profile clustering.
+
+This is an educational project based on OpenSky ADS-B state-vector data. The `price` variable is synthetic: it does **not** represent real airline ticket prices. The regression section demonstrates methodology, not a real-world pricing model.
+
+## Academic Context
+
+The project was completed as a ZHAW university group assignment. Its value is the complete introductory workflow—from collecting a live API response to preparing data, querying it with SQL, and applying statistical and machine-learning methods—not a production aviation system.
 
 ## Research Question
 
-> **Can flight velocity, altitude, and geographic position be used to predict and segment flight prices?**
+> **How can live OpenSky flight-state data be collected, validated, stored, analysed, and segmented into interpretable flight profiles?**
 
----
+Supporting questions:
+
+- What altitude, velocity, and geographic patterns appear in the collected snapshot?
+- How are observed aircraft distributed by country of registration?
+- Can the observations be grouped into descriptive profiles with clustering?
+
+The resulting clusters are exploratory groupings, not official aircraft or flight categories.
 
 ## Data Source
 
-**[OpenSky Network API](https://opensky-network.org/apidoc/)** — a free, open-source air traffic surveillance network that provides real-time and historical ADS-B flight state vectors (position, speed, altitude, heading, etc.) for civil aircraft worldwide.
+The data comes from the [OpenSky Network REST API](https://openskynetwork.github.io/opensky-api/rest.html), specifically the `/api/states/all` endpoint. Its state vectors describe observed aircraft states such as position, velocity, altitude, heading, and country of registration. They do not contain fares, routes, origins, destinations, or ticket prices.
 
----
+The committed raw JSON and processed CSV preserve an example snapshot, so the analysis can be inspected without making a new API request.
 
-## Project Workflow
+## End-to-End Workflow
 
-```
-OpenSky API
-    │
-    ▼
-1. Data Collection          — Live API call → raw JSON stored to data/raw/
-    │
-    ▼
-2. Data Cleaning &          — Filter airborne flights, drop nulls,
-   Feature Engineering        engineer synthetic price variable
-    │
-    ▼
-3. MySQL Storage            — Push cleaned DataFrame to a local MySQL database
-    │                         via SQLAlchemy; aggregate queries with SQL
-    ▼
-4. Exploratory Data         — Descriptive statistics, histograms, scatter plots,
-   Analysis (EDA)             boxplots, geographic map of flights
-    │
-    ▼
-5. Statistical Analysis     — Pearson correlation (velocity ↔ price),
-                              one-way ANOVA (price across top-5 countries)
-    │
-    ▼
-6. Regression Modeling      — Linear Regression to predict price from
-                              velocity, altitude, latitude, longitude;
-                              evaluated with R² and RMSE
-    │
-    ▼
-7. k-Means Clustering       — Segment flights into 3 groups by velocity,
-                              altitude, and price using StandardScaler + KMeans
+```mermaid
+flowchart LR
+    A["OpenSky API"] --> B["Raw JSON"]
+    B --> C["Cleaning and feature preparation"]
+    C --> D["MySQL"]
+    D --> E["SQL / EDA / statistics"]
+    E --> F["Regression demonstration and clustering"]
 ```
 
----
+The notebooks:
 
-## Repository Structure
-
-```
-flight-data-analytics/
-├── data/
-│   ├── raw/
-│   │   └── opensky_states_raw.json   # Original API response (JSON)
-│   └── processed/
-│       └── flights_clean.csv         # Cleaned & feature-engineered dataset
-├── notebooks/
-│   ├── Data_Analytics_Project.ipynb  # Main analysis notebook
-│   └── Project_group_35.ipynb        # Group presentation notebook
-├── presentation/
-│   └── Project_Group_35.html         # Exported HTML presentation
-├── README.md
-├── requirements.txt
-└── .gitignore
-```
-
----
+1. request a live state-vector snapshot and store the raw JSON;
+2. retain airborne observations, require coordinates, trim callsigns, and create the educational synthetic variable;
+3. optionally write selected fields to MySQL through SQLAlchemy and run an aggregate SQL query;
+4. perform descriptive and visual exploration;
+5. run Pearson correlation and one-way ANOVA exercises;
+6. demonstrate a train/test regression workflow; and
+7. standardise selected variables and apply KMeans clustering.
 
 ## Dataset Description
 
-The dataset is derived from a live snapshot of the **OpenSky Network** state vectors endpoint (`/api/states/all`). Each row represents one airborne aircraft at the time of the API call.
+Each processed row represents one airborne aircraft observation from a live snapshot.
 
-| Column           | Type    | Description                              |
-|------------------|---------|------------------------------------------|
-| `icao24`         | string  | Unique ICAO 24-bit aircraft address      |
-| `callsign`       | string  | Aircraft callsign                        |
-| `origin_country` | string  | Country of aircraft registration         |
-| `latitude`       | float   | WGS-84 latitude in decimal degrees       |
-| `longitude`      | float   | WGS-84 longitude in decimal degrees      |
-| `velocity`       | float   | Ground speed in m/s                      |
-| `geo_altitude`   | float   | Geometric altitude in meters             |
-| `price`          | float   | **Synthetic** price variable (engineered)|
+| Column | Meaning |
+|---|---|
+| `icao24` | ICAO 24-bit aircraft address |
+| `callsign` | Broadcast callsign, when available |
+| `origin_country` | Country of aircraft registration; not flight origin |
+| `latitude`, `longitude` | WGS-84 coordinates in decimal degrees |
+| `velocity` | Ground speed in metres per second |
+| `baro_altitude`, `geo_altitude` | Barometric and geometric altitude in metres |
+| `on_ground` | OpenSky ground-status flag |
+| `price` | Synthetic educational variable generated from velocity, geometric altitude, and random noise |
 
-> **Note:** The `price` column is synthetically generated for educational purposes using a linear model of velocity and altitude plus random noise. It does not represent real ticket prices.
+The remaining fields are preserved from the OpenSky state-vector schema. See the notebooks for the complete column list.
 
----
+## SQL and Database Integration
 
-## Main Notebook
+The database section uses SQLAlchemy with the PyMySQL driver to write a `flights` table to MySQL. It then runs a grouped SQL query by `origin_country`, including counts and aggregates of the synthetic variable.
 
-**[`notebooks/Data_Analytics_Project.ipynb`](notebooks/Data_Analytics_Project.ipynb)**
+Connection details are read from `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DATABASE`, `MYSQL_USER`, and `MYSQL_PASSWORD`; credentials are not stored in the notebooks. The MySQL cells are optional and can be skipped together. Later EDA, statistics, regression, and clustering cells continue from the in-memory `df_clean` DataFrame.
 
-The notebook is structured into 7 sections mirroring the workflow above:
+## Exploratory and Statistical Analysis
 
-| Section | Description |
-|---------|-------------|
-| **1. Data Collection** | Fetches live data from the OpenSky REST API and saves raw JSON |
-| **2. Data Preparation** | Cleans data, removes grounded aircraft, engineers the `price` feature |
-| **3. Data Storage** | Writes data to MySQL via SQLAlchemy; executes aggregate SQL queries |
-| **4. EDA** | Histograms, scatter plots, boxplots, and a geographic scatter map |
-| **5. Statistical Analysis** | Pearson correlation test and one-way ANOVA |
-| **6. Regression Modeling** | Train/test split, Linear Regression, R² / RMSE evaluation |
-| **7. Clustering** | StandardScaler + KMeans (k=3), cluster profile summary |
+The notebooks include descriptive statistics, histograms, scatter plots, boxplots, and a coordinate scatter plot. Pearson correlation examines velocity against the synthetic `price`; one-way ANOVA compares that synthetic variable across the five most frequent registration countries in the snapshot.
 
----
+These tests demonstrate statistical mechanics on the educational dataset. They do not establish airline pricing relationships or causal aviation findings.
 
-## How to Run the Notebook
+## Flight-Profile Clustering
 
-### Prerequisites
+KMeans with `k=3` is applied after standardising velocity, geometric altitude, and the synthetic variable. The resulting groups are useful for practising preprocessing and cluster profiling, but they are descriptive only. Because one clustering feature is synthetic, the clusters must not be interpreted as real fare segments, official operational categories, or aircraft classes.
 
-- Python 3.9+
-- A running **MySQL** instance with a database named `flights_db`
-  - Default connection string: `mysql+pymysql://root:passwort@localhost:3306/flights_db`
-  - Update the connection string in **Section 3** of the notebook if needed
+## Educational Regression Demonstration
 
-### Setup
+The academic submission retains a linear-regression exercise using velocity, geometric altitude, latitude, and longitude to estimate the synthetic `price` target. The target was constructed partly from velocity and geometric altitude, so predictors used by the regression also contributed to target generation.
+
+Consequently, the reported model performance is **not** evidence that flight-state data can predict real ticket prices. The section demonstrates train/test splitting, fitting a linear regression, generating predictions, and calculating RMSE and R².
+
+## Repository Structure
+
+```text
+flight-data-analytics/
+├── data/
+│   ├── raw/opensky_states_raw.json
+│   └── processed/flights_clean.csv
+├── notebooks/
+│   ├── Data_Analytics_Project.ipynb
+│   └── Project_group_35.ipynb
+├── presentation/Project_Group_35.html
+├── scripts/validate_data.py
+├── .env.example
+├── README.md
+└── requirements.txt
+```
+
+[`notebooks/Data_Analytics_Project.ipynb`](notebooks/Data_Analytics_Project.ipynb) is the main analysis notebook. [`notebooks/Project_group_35.ipynb`](notebooks/Project_group_35.ipynb) and the [HTML export](presentation/Project_Group_35.html) retain the group-presentation version of the academic work.
+
+## Local Setup
+
+Python 3.12 is recommended because the notebook metadata records Python 3.12.7.
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/Scampoloni/flight-data-analytics.git
 cd flight-data-analytics
-
-# 2. Create and activate a virtual environment (recommended)
 python -m venv .venv
-# Windows
-.venv\Scripts\activate
+```
+
+Activate the environment:
+
+```powershell
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+```
+
+```bash
 # macOS / Linux
 source .venv/bin/activate
+```
 
-# 3. Install dependencies
-pip install -r requirements.txt
+Install dependencies and launch the main notebook:
 
-# 4. Launch Jupyter
+```bash
+python -m pip install -r requirements.txt
 jupyter notebook notebooks/Data_Analytics_Project.ipynb
 ```
 
-> If you do not have a MySQL server available, you can skip Section 3 (Data Storage) — all downstream analysis uses the in-memory `df_clean` DataFrame, not the database.
+Before running the optional MySQL section, create a database, use `.env.example` as a reference, and set the five variables in the shell that launches Jupyter. For example:
 
----
+```powershell
+$env:MYSQL_HOST = "localhost"
+$env:MYSQL_PORT = "3306"
+$env:MYSQL_DATABASE = "flights_db"
+$env:MYSQL_USER = "your_mysql_user"
+$env:MYSQL_PASSWORD = "your_mysql_password"
+jupyter notebook notebooks/Data_Analytics_Project.ipynb
+```
 
-## Python Libraries Used
+The notebook does not automatically load `.env` files. If MySQL is unavailable, skip all cells in Section 3; subsequent analysis uses `df_clean` rather than the SQL result.
 
-| Library | Purpose |
-|---------|---------|
-| `pandas` | Data manipulation and analysis |
-| `numpy` | Numerical computing |
-| `matplotlib` | Static plotting |
-| `seaborn` | Statistical visualizations |
-| `scikit-learn` | Machine learning (LinearRegression, KMeans, StandardScaler) |
-| `scipy` | Statistical tests (Pearson correlation, ANOVA) |
-| `requests` | HTTP calls to the OpenSky API |
-| `sqlalchemy` | Database ORM / engine for MySQL |
-| `pymysql` | MySQL driver (used by SQLAlchemy) |
-| `jupyter` | Interactive notebook environment |
+To validate the committed processed CSV without calling the API or MySQL:
 
----
+```bash
+python scripts/validate_data.py
+```
 
-## Authors
+## Project Context and Contribution
 
-**Group 35** — University Data Analytics Project
+This was a ZHAW university group project.
+
+**Individual contribution: TODO — add the specific parts personally implemented or analysed.**
+
+The available repository history does not provide enough evidence to attribute particular notebook sections to one person, so no individual contribution claim is made here.
+
+## Limitations
+
+- The files may represent only a single live snapshot; traffic changes by time, coverage, and API availability.
+- `origin_country` is the country of aircraft registration, not the flight's origin or destination.
+- ADS-B state vectors do not include ticket prices; `price` is synthetic and educational.
+- Missing coordinates, callsigns, altitude, and other state-vector values are common.
+- Live OpenSky availability, response size, authentication requirements, and rate limits may vary.
+- Snapshot patterns should not be generalised to the global aviation system.
+- Pearson correlation and ANOVA involving `price` describe a constructed variable, not market pricing.
+- Regression performance is influenced by target construction and has no real pricing validity.
+- KMeans output is descriptive, sensitive to selected features and `k`, and is not an official classification.
+- No operational, causal, or aviation-safety conclusions should be drawn.
+
+## Authors / Group Context
+
+**Group 35 — ZHAW University Data Analytics Project**
+
+The repository preserves the original group notebooks and presentation. Add the verified names and roles of all group members here if the group has agreed to publish them.
